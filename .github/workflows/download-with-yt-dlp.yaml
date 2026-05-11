@@ -17,18 +17,23 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install yt-dlp and FFmpeg
+      - name: Install yt-dlp, FFmpeg, and JavaScript runtime
         run: |
           # Install FFmpeg from Ubuntu repos
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           
-          # Install yt-dlp via pip (more reliable)
+          # Install Node.js (required for JavaScript challenge solving)
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          
+          # Install yt-dlp via pip
           pip install yt-dlp
           
           # Verify installations
           yt-dlp --version
           ffmpeg -version | head -n1
+          node --version
 
       - name: Setup YouTube Cookies
         run: |
@@ -71,7 +76,9 @@ jobs:
 
           echo "⚙️ Options: Quality=$QUALITY | Playlist=${PLAYLIST/--no-playlist/Disabled} | Audio=$AUDIO_ONLY"
 
+          # Add --remote-components ejs:npm to enable JavaScript challenge solving
           YT_CMD="yt-dlp \
+            --remote-components ejs:npm \
             --concurrent-fragments 8 \
             --retries 10 \
             --fragment-retries 10 \
@@ -103,6 +110,12 @@ jobs:
           YT_CMD="$YT_CMD --output 'downloads/%(title)s [%(id)s].%(ext)s'"
 
           echo "🚀 Running yt-dlp..."
+          
+          # First, list available formats to debug
+          echo "📋 Checking available formats..."
+          yt-dlp --remote-components ejs:npm --cookies ~/.cache/yt-dlp/youtube/cookies.txt --list-formats "$URL" || true
+          
+          # Then attempt download
           eval "$YT_CMD \"$URL\""
 
           echo "✅ Download finished"
@@ -163,7 +176,7 @@ jobs:
         run: |
           BRANCH="${GITHUB_REF_NAME}"
           git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config.user.email "github-actions@github.com"
           git add downloads/
           git commit -m "Add downloaded files from commit [skip ci]" || echo "Nothing to commit"
           echo "🚀 Pushing to branch: $BRANCH"
