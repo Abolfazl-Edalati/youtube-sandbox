@@ -17,9 +17,19 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup yt-dlp
-        uses: AnimMouse/setup-yt-dlp@v3
+      - name: Install yt-dlp and FFmpeg
+        run: |
+          # Install FFmpeg from Ubuntu repos
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
           
+          # Install yt-dlp via pip (more reliable)
+          pip install yt-dlp
+          
+          # Verify installations
+          yt-dlp --version
+          ffmpeg -version | head -n1
+
       - name: Setup YouTube Cookies
         run: |
           mkdir -p ~/.cache/yt-dlp/youtube
@@ -148,7 +158,6 @@ jobs:
           done
       
           echo "🎉 All files processed successfully"
-
 
       - name: Commit & Push
         run: |
