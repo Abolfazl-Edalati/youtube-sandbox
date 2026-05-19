@@ -17,28 +17,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # ✅ FIX 1: Cache ffmpeg to a user-writable path, then symlink into /usr/bin
-      - name: Cache ffmpeg
-        id: cache-ffmpeg
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/bin/ffmpeg
-          key: ffmpeg-${{ runner.os }}-v1
-
       - name: Install ffmpeg and AtomicParsley
-        if: steps.cache-ffmpeg.outputs.cache-hit != 'true'
-        run: |
-          sudo apt-get install -y ffmpeg atomicparsley
-          mkdir -p ~/.local/bin
-          cp /usr/bin/ffmpeg ~/.local/bin/ffmpeg
+        run: sudo apt-get install -y ffmpeg atomicparsley
 
-      - name: Make cached ffmpeg available
-        if: steps.cache-ffmpeg.outputs.cache-hit == 'true'
-        run: |
-          sudo cp ~/.local/bin/ffmpeg /usr/bin/ffmpeg
-          sudo chmod +x /usr/bin/ffmpeg
-
-      # ✅ FIX 2: Use a static cache key since there's no requirements.txt
       - name: Cache yt-dlp installation
         id: cache-ytdlp
         uses: actions/cache@v4
