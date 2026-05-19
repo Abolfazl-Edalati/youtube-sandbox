@@ -24,9 +24,9 @@ jobs:
           path: /usr/bin/ffmpeg
           key: ffmpeg-${{ runner.os }}
 
-      - name: Install ffmpeg
+      - name: Install ffmpeg and AtomicParsley
         if: steps.cache-ffmpeg.outputs.cache-hit != 'true'
-        run: sudo apt-get install -y ffmpeg
+        run: sudo apt-get install -y ffmpeg atomicparsley
 
       - name: Cache yt-dlp
         uses: actions/cache@v4
@@ -36,7 +36,7 @@ jobs:
 
       - name: Setup yt-dlp
         run: |
-          sudo pip install "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0" --break-system-packages
+          sudo pip install mutagen "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0" --break-system-packages
           yt-dlp --version
           
       - name: Setup Cookies
