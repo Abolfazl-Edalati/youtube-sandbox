@@ -39,16 +39,20 @@ jobs:
           sudo chmod +x /usr/bin/ffmpeg
 
       # ✅ FIX 2: Use a static cache key since there's no requirements.txt
-      - name: Cache yt-dlp pip packages
+      - name: Cache yt-dlp installation
+        id: cache-ytdlp
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
+          path: ~/.local
           key: yt-dlp-${{ runner.os }}-v1
 
       - name: Setup yt-dlp
+        if: steps.cache-ytdlp.outputs.cache-hit != 'true'
         run: |
-          sudo pip install mutagen "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0" --break-system-packages
-          yt-dlp --version
+          pip install --user mutagen "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0"
+
+      - name: Verify yt-dlp
+        run: yt-dlp --version
 
       - name: Setup Cookies
         run: |
