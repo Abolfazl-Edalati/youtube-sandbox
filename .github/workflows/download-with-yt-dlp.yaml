@@ -17,14 +17,14 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup yt-dlp
-        uses: AnimMouse/setup-yt-dlp@v3
+      - name: Cache yt-dlp
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: yt-dlp-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
 
-      - name: Install yt-dlp impersonation dependencies
-        run: |
-          YT_DLP_PYTHON=$(head -1 $(which yt-dlp) | sed 's/#!\s*//')
-          echo "yt-dlp Python: $YT_DLP_PYTHON"
-          $YT_DLP_PYTHON -m pip install curl-cffi
+      - name: Setup yt-dlp
+        run: pip install yt-dlp curl-cffi
           
       - name: Setup YouTube Cookies
         run: |
