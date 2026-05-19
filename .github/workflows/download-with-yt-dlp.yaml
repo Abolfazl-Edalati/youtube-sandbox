@@ -25,7 +25,7 @@ jobs:
 
       - name: Setup yt-dlp
         run: |
-          sudo pip install "git+https://github.com/0xvd/yt-dlp-exp@pornhub_410" "curl-cffi==0.10.0" --break-system-packages
+          sudo pip install "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0" --break-system-packages
           yt-dlp --version
           
       - name: Setup Cookies
