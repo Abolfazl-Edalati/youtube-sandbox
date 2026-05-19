@@ -108,11 +108,11 @@ jobs:
             YT_CMD="$YT_CMD --no-playlist"
           fi
 
-          [ "$SUBTITLES"    = "true"  ] && YT_CMD="$YT_CMD --write-auto-sub --embed-subs"
-          [ "$SPONSORBLOCK" = "true"  ] && YT_CMD="$YT_CMD --sponsorblock-remove all"
-          [ "$IMPERSONATE"  = "true"  ] && YT_CMD="$YT_CMD --impersonate chrome"
+          [ "$SUBTITLES"    = "true" ] && YT_CMD="$YT_CMD --write-auto-sub --embed-subs"
+          [ "$SPONSORBLOCK" = "true" ] && YT_CMD="$YT_CMD --sponsorblock-remove all"
+          [ "$IMPERSONATE"  = "true" ] && YT_CMD="$YT_CMD --impersonate chrome"
 
-          YT_CMD="$YT_CMD --embed-metadata --embed-thumbnail --embed-chapters --restrict-filenames"
+          YT_CMD="$YT_CMD --embed-metadata --embed-thumbnail --embed-chapters --restrict-filenames --trim-filenames 150"
           YT_CMD="$YT_CMD --output 'downloads/%(title)s [%(id)s].%(ext)s'"
 
           echo "🚀 Running yt-dlp..."
