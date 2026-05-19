@@ -17,28 +17,39 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # ✅ FIX 1: Cache ffmpeg to a user-writable path, then symlink into /usr/bin
       - name: Cache ffmpeg
         id: cache-ffmpeg
         uses: actions/cache@v4
         with:
-          path: /usr/bin/ffmpeg
-          key: ffmpeg-${{ runner.os }}
+          path: ~/.local/bin/ffmpeg
+          key: ffmpeg-${{ runner.os }}-v1
 
       - name: Install ffmpeg and AtomicParsley
         if: steps.cache-ffmpeg.outputs.cache-hit != 'true'
-        run: sudo apt-get install -y ffmpeg atomicparsley
+        run: |
+          sudo apt-get install -y ffmpeg atomicparsley
+          mkdir -p ~/.local/bin
+          cp /usr/bin/ffmpeg ~/.local/bin/ffmpeg
 
-      - name: Cache yt-dlp
+      - name: Make cached ffmpeg available
+        if: steps.cache-ffmpeg.outputs.cache-hit == 'true'
+        run: |
+          sudo cp ~/.local/bin/ffmpeg /usr/bin/ffmpeg
+          sudo chmod +x /usr/bin/ffmpeg
+
+      # ✅ FIX 2: Use a static cache key since there's no requirements.txt
+      - name: Cache yt-dlp pip packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: yt-dlp-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          key: yt-dlp-${{ runner.os }}-v1
 
       - name: Setup yt-dlp
         run: |
           sudo pip install mutagen "git+https://github.com/0xvd/yt-dlp-exp@fix/pornhub_410" "curl-cffi==0.10.0" --break-system-packages
           yt-dlp --version
-          
+
       - name: Setup Cookies
         run: |
           mkdir -p ~/.cache/yt-dlp/{youtube,pornhub}
@@ -118,59 +129,47 @@ jobs:
           echo "🚀 Running yt-dlp..."
           eval "$YT_CMD \"$URL\""
 
-          echo "✅ Download finished"          
+          echo "✅ Download finished"
+
       - name: Split large files into 90MB chunks
         run: |
           echo "🔧 Processing downloaded files for splitting..."
-      
+
           LIMIT=$((90 * 1024 * 1024))  # 90MB
-      
+
           for FILE in downloads/*; do
             [ -f "$FILE" ] || continue
-      
+
             SIZE=$(stat -c%s "$FILE")
             BASENAME=$(basename "$FILE")
-      
-            # Remove extension
+
             NAME="${BASENAME%.*}"
-      
-            # Convert to clean kebab-case
+
             FOLDERNAME=$(echo "$NAME" \
               | tr '[:upper:]' '[:lower:]' \
               | sed 's/[^a-z0-9]/-/g' \
               | sed 's/-\+/-/g' \
               | sed 's/^-//;s/-$//')
-      
+
             echo "📄 $BASENAME ($(numfmt --to=iec-i --suffix=B $SIZE))"
-      
+
             if [ "$SIZE" -gt "$LIMIT" ]; then
               echo "✂️ Splitting large file → Folder: $FOLDERNAME"
-      
-              # Create destination folder
+
               mkdir -p "downloads/$FOLDERNAME"
-      
-              # Move original file into folder
               mv "$FILE" "downloads/$FOLDERNAME/$BASENAME"
-      
-              # Enter folder
               cd "downloads/$FOLDERNAME" || exit 1
-      
-              # Create multipart zip INSIDE the folder
               zip -s 90m "${FOLDERNAME}.zip" "$BASENAME" -q
-      
-              # Remove original file after successful zip
               rm -f "$BASENAME"
-      
               cd ../..
-      
+
               echo "✅ Multipart zip created in downloads/$FOLDERNAME/"
             else
               echo "✅ File under 90MB → kept as single file"
             fi
           done
-      
-          echo "🎉 All files processed successfully"
 
+          echo "🎉 All files processed successfully"
 
       - name: Commit & Push
         run: |
