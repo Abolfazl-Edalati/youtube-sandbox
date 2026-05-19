@@ -19,6 +19,9 @@ jobs:
 
       - name: Setup yt-dlp
         uses: AnimMouse/setup-yt-dlp@v3
+
+      - name: Install yt-dlp impersonation dependencies
+        run: pip install curl-cffi
           
       - name: Setup YouTube Cookies
         run: |
