@@ -25,8 +25,7 @@ jobs:
 
       - name: Setup yt-dlp
         run: |
-          sudo pip install yt-dlp "curl-cffi==0.9.8" --break-system-packages
-          echo "--- Available impersonate targets ---"
+          sudo pip install yt-dlp "curl-cffi==0.10.0" --break-system-packages
           yt-dlp --list-impersonate-targets
           
       - name: Setup YouTube Cookies
